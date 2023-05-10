@@ -44,9 +44,9 @@
             <a class="nav-link active" aria-current="page" href="{% url 'about' %}">About us</a>
           </li> {% endcomment %}
          </ul>
-         <form method='get' action='/search' class="d-flex">
+         <form method="GET" action='/search' class="d-flex">
           
-          <input name="search" id="search" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+          <input name="keyword" id="search" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
           <button class="btn btn-outline-success" type="submit">Search</button>
          
          </form>
@@ -84,8 +84,15 @@
             <li class="nav-item mx-2">
              <a href="{% url 'customerregistration' %}" class="nav-link text-white">Registration</a>
             </li>
+            <form method='get' action='/search/' class="d-flex">
+          
+              <input name="keyword" id="search" class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
+              <button class="btn btn-outline-success" type="submit">Search</button>
+             
+             </form>
             {% endif %}
           </ul>
+          
          </div>
        </div>
      </div>

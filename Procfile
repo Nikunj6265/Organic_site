@@ -1,0 +1,1 @@
+web: gunicorn shoppinglyx.wsgi --logo-file -
