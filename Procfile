@@ -1,1 +1,1 @@
-web: gunicorn shoppinglyx.wsgi --logo-file -
+web: gunicorn shoppinglyx.wsgi --log-file -
