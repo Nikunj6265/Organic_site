@@ -9,7 +9,9 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from math import ceil
 from django.views.generic import View, TemplateView
-
+from django.views.decorators.csrf import csrf_protect
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_protect
 
 # def home(request):
 # return render(request, 'app/home.html')
@@ -179,7 +181,7 @@ def minus_cart(request):
 def buy_now(request):
     return render(request, 'app/buynow.html')
 
-
+@csrf_protect
 @login_required
 def profile(request):
     user = request.user
@@ -216,7 +218,7 @@ def about(request):
 
 # def customerregistration(request):
 #  return render(request, 'app/customerregistration.html')
-
+@method_decorator(csrf_protect, name='dispatch')
 class CustomerRegistration(View):
     def get(self, request):
         form = CustomerRegistrationForm()
@@ -258,9 +260,10 @@ def payment_done(request):
         c.delete()
     return redirect("orders")
 
-
+@method_decorator(csrf_protect, name='dispatch')
 @method_decorator(login_required, name='dispatch')
 class ProfileView(View):
+    
     def get(self, request):
         form = CustomerProfileForm()
         user = request.user
