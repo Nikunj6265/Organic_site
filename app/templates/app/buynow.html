@@ -2,5 +2,45 @@
 {% load static %}
 {% block title %}Buy Now{% endblock title %}
 {% block main-content %}
-Product Buy Now
+<div class="container">
+ <div class="row mt-5">
+  <div class="col-sm-6">
+    <h4>Order Summary</h4>
+    <hr>
+      <div class="card mb-2">
+        <div class="card-body">
+          <h5>Product: {{p.title}}</h5>
+          <p>Quantity: {{1}}</p>
+          <p class="fw-bold">Price: {{p.discounted_price}}</p>
+        </div>
+      </div>
+
+    <p><h6>Total Cost + Rs.70 =  Rs. {{totalamount}}</h6></p>
+    <small>Term and Condition: The product is non-returnable. For a damaged, defective, expired or incorrect item, you can request a replacement within 24 hours of delivery.
+In case of an incorrect item, you may raise a replacement or return request only if the item is sealed/ unopened/ unused and in original condition.</small>
+  </div>
+  <div class="col-sm-4 offset-sm-1">
+    <h4>Select Shipping Address</h4>
+    <hr>
+    <form action="/paymentdone">
+    {% for ad in add %}
+      <div class="card">
+        <div class="card-body">
+        <h5>{{ad.name}}</h5>
+        <p>{{ad.locality}},{{ad.city}},{{ad.state}} - {{ad.zipcode}}</p>
+        </div>
+      </div>
+        <div class="form-check mt-2 mb-5">
+          <input class="form-check-input" type="radio" name="custid" id="custadd{{forloop.counter}}" value="{{ad.id}}">
+          <label class="form-check-label fw-bold" for="custadd{{forloop.counter}}">
+            Address: {{forloop.counter}}</label>
+        </div>
+        {% endfor %}
+        <div class="text-end">
+          <button type="submit" class="btn btn-warning mt-3 px-5 fw-bold">Continue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock main-content %}

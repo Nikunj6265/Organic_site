@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, HttpResponse
 from django.contrib import messages
 from .models import Customer, Product, Cart, OrderePlaced
-from .forms import CustomerRegistrationForm, CustomerProfileForm
+from .forms import CustomerRegistrationForm, CustomerProfileForm, LoginForm
 from django.views import View
 from django.http import JsonResponse
 from django.db.models import Q
@@ -9,9 +9,11 @@ from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
 from math import ceil
 from django.views.generic import View, TemplateView
-from django.views.decorators.csrf import csrf_protect
+from django.views.decorators.csrf import csrf_protect, csrf_exempt
 from django.utils.decorators import method_decorator
-from django.views.decorators.csrf import csrf_protect
+from django.contrib.auth.views import LoginView
+from django.contrib.auth import authenticate, login
+
 
 # def home(request):
 # return render(request, 'app/home.html')
@@ -29,8 +31,34 @@ class ProductView(View):
                        'object_size': object_size})
 
 
+@csrf_protect
+def profile(request):
+    user = request.user
+    my_object = [p for p in Cart.objects.all() if p.user == user]
+    object_size = len(my_object)
+    return render(request, 'app/profile.html', {'object_size': object_size})
+
+
+@csrf_exempt
+def custom_login(request):
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            login(request, user)
+            return redirect('profile')  # Redirect to a success page
+        else:
+            # Handle invalid login credentials
+            error_message = "Invalid username or password."
+            return render(request, 'app/login.html', {'error_message': error_message})
+
+    form = LoginForm()
+    return render(request, 'app/login.html', {'form': form})
+
+
 # class my_view(View):
-#   def get(self, request):  
+#   def get(self, request):
 #     user = request.user
 #     my_object = [p for p in Cart.objects.all() if p.user==user]
 #     object_size = sys.getsizeof(my_object)
@@ -42,6 +70,7 @@ class ProductView(View):
 class ProductDetailView(View):
     def get(self, request, pk):
         product = Product.objects.get(pk=pk)
+
         item_already_in_cart = False
         my_object = [p for p in Cart.objects.all() if p.user == request.user]
         object_size = len(my_object)
@@ -51,19 +80,51 @@ class ProductDetailView(View):
                       {'product': product, 'item_already_in_cart': item_already_in_cart, 'object_size': object_size})
 
 
+
+def checkout(request):
+    user = request.user
+    add = Customer.objects.filter(user=user)
+    cart_items = Cart.objects.filter(user=user)
+    amount = 0.0
+    shipping_amount = 70.0
+    cart_product = [p for p in Cart.objects.all() if p.user == request.user]
+    if cart_product:
+        for p in cart_product:
+            tempamount = (p.quantity * p.Product.discounted_price)
+            amount += tempamount
+        totalamount = amount + shipping_amount
+
+    return render(request, 'app/checkout.html', {'add': add, 'totalamount': totalamount, 'cart_items': cart_items})
+
+
+@login_required()
+def buy_now(request, pk):
+    user = request.user
+    p = Product.objects.get(pk=pk)
+    add = Customer.objects.filter(user=user)
+
+    amount = 0.0
+    shipping_amount = 70.0
+    tempamount = p.discounted_price
+    amount += tempamount
+    totalamount = amount + shipping_amount
+
+    return render(request, 'app/buynow.html', {'add': add, 'totalamount': totalamount, 'p': p})
+
+
 @login_required()
 def add_to_cart(request):
-	user = request.user
-	item_already_in_cart1 = False
-	product = request.GET.get('prod_id')
-	item_already_in_cart1 = Cart.objects.filter(Q(Product=product) & Q(user=request.user)).exists()
-	if item_already_in_cart1 == False:
-		product_title = Product.objects.get(id=product)
-		Cart(user=user, Product=product_title).save()
-		messages.success(request, 'Product Added to Cart Successfully !!' )
-		return redirect('/cart')
-	else:
-		return redirect('/cart')
+    user = request.user
+    item_already_in_cart1 = False
+    product = request.GET.get('prod_id')
+    item_already_in_cart1 = Cart.objects.filter(Q(Product=product) & Q(user=request.user)).exists()
+    if item_already_in_cart1 == False:
+        product_title = Product.objects.get(id=product)
+        Cart(user=user, Product=product_title).save()
+        messages.success(request, 'Product Added to Cart Successfully !!')
+        return redirect('/cart')
+    else:
+        return redirect('/cart')
 
 
 # def add_to_cart(request):
@@ -177,17 +238,6 @@ def minus_cart(request):
     else:
         return HttpResponse("")
 
-@login_required
-def buy_now(request):
-    return render(request, 'app/buynow.html')
-
-@csrf_protect
-@login_required
-def profile(request):
-    user = request.user
-    my_object = [p for p in Cart.objects.all() if p.user == user]
-    object_size = len(my_object)
-    return render(request, 'app/profile.html', {'object_size': object_size})
 
 
 @login_required
@@ -218,7 +268,7 @@ def about(request):
 
 # def customerregistration(request):
 #  return render(request, 'app/customerregistration.html')
-@method_decorator(csrf_protect, name='dispatch')
+@method_decorator(csrf_exempt, name='dispatch')
 class CustomerRegistration(View):
     def get(self, request):
         form = CustomerRegistrationForm()
@@ -233,23 +283,6 @@ class CustomerRegistration(View):
 
 
 @login_required()
-def checkout(request):
-    user = request.user
-    add = Customer.objects.filter(user=user)
-    cart_items = Cart.objects.filter(user=user)
-    amount = 0.0
-    shipping_amount = 70.0
-    cart_product = [p for p in Cart.objects.all() if p.user == request.user]
-    if cart_product:
-        for p in cart_product:
-            tempamount = (p.quantity * p.Product.discounted_price)
-            amount += tempamount
-        totalamount = amount + shipping_amount
-
-    return render(request, 'app/checkout.html', {'add': add, 'totalamount': totalamount, 'cart_items': cart_items})
-
-
-@login_required()
 def payment_done(request):
     user = request.user
     custid = request.GET.get('custid')
@@ -260,10 +293,10 @@ def payment_done(request):
         c.delete()
     return redirect("orders")
 
-@method_decorator(csrf_protect, name='dispatch')
-@method_decorator(login_required, name='dispatch')
+
+@method_decorator(csrf_exempt, name='dispatch')
 class ProfileView(View):
-    
+
     def get(self, request):
         form = CustomerProfileForm()
         user = request.user
@@ -286,15 +319,15 @@ class ProfileView(View):
         return render(request, 'app/profile.html', {'form': form, 'active': 'btn-primary'})
 
 
+class SearchView(TemplateView):
+    template_name = "app/search.html"
 
-class SearchView(TemplateView): 
-  template_name = "app/search.html"
-  def  get_context_data(self, **kwargs):
-    context = super().get_context_data(**kwargs)
-    kw = self.request.GET["keyword"]
-    results = Product.objects.filter(Q(title__contains=kw) | Q(description__contains=kw))
-    context["results"] = results
-    return context
-  
-    
- 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        kw = self.request.GET["keyword"]
+        results = Product.objects.filter(Q(title__contains=kw) | Q(description__contains=kw))
+        context["results"] = results
+        return context
+
+
+

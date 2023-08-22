@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-tm&wv9_hr8of71yof%_p6-d9&($2ask&_3cdzu6^$s6x_0aa3z'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['*','railway.app']
 
 
 # Application definition
@@ -127,6 +127,7 @@ STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 LOGIN_REDIRECT_URL = '/profile/'
+LOGIN_URL = '/login/'
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'app/static/app')]
 STATIC_ROOT =os.path.join(BASE_DIR, 'staticfiles')
